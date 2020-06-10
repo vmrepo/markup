@@ -12,12 +12,12 @@ esc - exit without saving
 
 enter - exit and save
 
-/ - one step back without saving
+'/' - one step back without saving
 
-* - exit with flag to remove markup
+'*' - exit with flag to remove markup
 
 Tab - receiving the current region and moving to another
 
-+ - receiving the current region and begin edit new region
+'+' - receiving the current region and begin edit new region
 
 Backspace - delete the last entered point of the current region

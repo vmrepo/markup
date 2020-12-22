@@ -10,14 +10,16 @@ Keys for control:
 
 esc - exit without saving
 
-enter - exit and save
+enter - save and move to next image
 
-'/' - one step back without saving
+'/' - move to previous image without saving
 
-'*' - exit with flag to remove markup
+'*' - remove markup
 
-Tab - receiving the current region and moving to another
+Tab - moving from region to region
 
-'+' - receiving the current region and begin edit new region
+'+' - begin new region
 
 Backspace - delete the last entered point of the current region
+
+'r' - remove markup and rotation 90 degrees

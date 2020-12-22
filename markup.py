@@ -12,6 +12,31 @@ STARTFILEIDX = 0
 MAXWIDTH = ImageGrab.grab().size[0] * 0.9
 MAXHEIGHT = ImageGrab.grab().size[1] * 0.9
 
+def readmarkup(filename):
+    markuppoints = {}
+    with open(filename) as f:
+        for l in f.read().splitlines():
+            l = l.split(',')
+            fl, xyss = l[0], [xys.split(' ') for xys in l[1].split('|')]
+            ptss = []
+            for xys in xyss:
+                pts = []
+                for i in range(0, len(xys), 2):
+                    pts.append((int(xys[i]), int(xys[i + 1])))
+                ptss.append(pts)
+            markuppoints[fl] = ptss
+    return markuppoints
+
+def savemarkup(filename, markuppoints):
+    with open(filename, 'w') as f:
+        fls = sorted(markuppoints.keys())
+        for fl in fls: 
+            ptss = markuppoints[fl]
+            f.write(fl + ',' + '|'.join([' '.join([str(d) for pt in pts for d in pt]) for pts in ptss]) + '\n')
+
+def imrotate(filename):
+    cv2.imwrite(filename, cv2.rotate(cv2.imread(filename), cv2.ROTATE_90_CLOCKWISE))
+
 def onMouse(event, x, y, flags, param):
     global scale
     global pts
@@ -119,7 +144,7 @@ def markup(idx, filename, ptss_ = None):
             ptss = []
             break
 
-        #exit and save
+        #save and move to next image
         if ch == 13:#Enter
             if len(pts) > 3 or (len(ptss) > 1 and len(pts) == 0):
                 if len(pts) == 0:
@@ -127,18 +152,20 @@ def markup(idx, filename, ptss_ = None):
                 else:
                     ptss[current] = pts
                 break
+            if len(pts) == 0:
+                break
 
-        #one step back without saving
+        #move to previous image without saving
         if ch == 47:#/
             ptss = -1
             break
 
-        #exit with flag to remove markup
+        #remove markup
         if ch == 42:#*
             ptss = False
             break
 
-        #receiving the current region and moving to another
+        #moving from region to region
         if ch == 9:#Tab
             if (len(pts) > 3 and len(ptss) > 1) or (len(ptss) > 1 and len(pts) == 0):
                 if len(pts) == 0:
@@ -147,7 +174,7 @@ def markup(idx, filename, ptss_ = None):
                     ptss[current] = pts
                 current = current + 1 if current + 1 < len(ptss) else 0
 
-        #receiving the current region and begin edit new region
+        #begin new region
         if ch == 43:#+
             if len(pts) > 3:
                 ptss[current] = pts
@@ -156,8 +183,13 @@ def markup(idx, filename, ptss_ = None):
 
         #delete the last entered point of the current region
         if ch == 8:#Backspace
-           if len(pts) != 0:
-               pts.pop()
+            if len(pts) != 0:
+                pts.pop()
+
+        #remove markup and rotation 90 degrees
+        if ch == 114:#r
+            ptss = -2
+            break
 
     cv2.destroyWindow(winname)
 
@@ -168,20 +200,7 @@ def main():
 
     isbackup = False
 
-    markuppoints = {}
-
-    if os.path.exists(MARKUPFILE):
-        with open(MARKUPFILE) as f:
-            for l in f.read().splitlines():
-                l = l.split(',')
-                fl, xyss = l[0], [xys.split(' ') for xys in l[1].split('|')]
-                ptss = []
-                for xys in xyss:
-                    pts = []
-                    for i in range(0, len(xys), 2):
-                        pts.append((int(xys[i]), int(xys[i + 1])))
-                    ptss.append(pts)
-                markuppoints[fl] = ptss
+    markuppoints = readmarkup(MARKUPFILE)
 
     files = os.listdir(IMGSDIR)
 
@@ -213,6 +232,12 @@ def main():
             idx = (idx - 1) if idx > 0 else 0
             continue
 
+        elif ptss == -2:
+            imrotate(filename)
+            if fl in markuppoints.keys():
+                markuppoints.pop(fl)
+            idx -= 1
+
         elif ptss == False:
             if fl in markuppoints.keys():
                 markuppoints.pop(fl)
@@ -223,6 +248,10 @@ def main():
         elif len(ptss) == 0:
             print('Userbreak')
             exit()
+
+        elif len(ptss[0]) == 0:
+            idx += 1
+            continue
 
         elif fl in markuppoints.keys() and ptss == ptss_:
             idx += 1
@@ -235,11 +264,7 @@ def main():
             shutil.copyfile(MARKUPFILE, MARKUPFILE + '.bak')
         isbackup = True
 
-        with open(MARKUPFILE, 'w') as f:
-            fls = sorted(markuppoints.keys())
-            for fl in fls: 
-                ptss = markuppoints[fl]
-                f.write(fl + ',' + '|'.join([' '.join([str(d) for pt in pts for d in pt]) for pts in ptss]) + '\n')
+        savemarkup(MARKUPFILE, markuppoints)
 
         idx += 1
 

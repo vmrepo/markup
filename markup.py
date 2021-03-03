@@ -134,7 +134,7 @@ def markup(idx, filename, ptss_ = None):
         pts = ptss[current]
 
         cv2.imshow(winname, img_)
-        cv2.moveWindow(winname, 20, 20)
+        cv2.moveWindow(winname, 10, 10)
         cv2.setMouseCallback(winname, onMouse)
 
         ch = cv2.waitKey(50)
@@ -200,7 +200,7 @@ def main():
 
     isbackup = False
 
-    markuppoints = readmarkup(MARKUPFILE)
+    markuppoints = readmarkup(MARKUPFILE) if os.path.exists(MARKUPFILE) else {}
 
     files = os.listdir(IMGSDIR)
 

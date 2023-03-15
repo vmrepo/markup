@@ -241,9 +241,7 @@ def main():
         elif ptss == False:
             if fl in markuppoints.keys():
                 markuppoints.pop(fl)
-            else:
-                idx += 1
-                continue
+            continue
 
         elif len(ptss) == 0:
             print('Userbreak')
